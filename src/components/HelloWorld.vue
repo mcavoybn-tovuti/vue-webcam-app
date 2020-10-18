@@ -41,10 +41,16 @@
         <v-btn dark color="red" @click="onStop">Stop Camera</v-btn>
         <v-btn dark color="green" @click="onStart">Start Camera</v-btn>
       </v-col>
-      <v-col cols="6">
+      <v-col cols="12">
         <h2>Captured Image</h2>
         <figure class="figure">
           <img :src="img" class="img-responsive" />
+        </figure>
+      </v-col>
+			<v-col cols="12">
+        <h2>Processed Image</h2>
+        <figure class="figure">
+          <img :src="processedImage" class="img-responsive" />
         </figure>
       </v-col>
     </v-row>
@@ -61,7 +67,8 @@ export default {
   },
   data() {
     return {
-      img: null,
+			img: null,
+			processedImage: null,
       camera: null,
       deviceId: null,
       devices: [],
@@ -93,8 +100,12 @@ export default {
       console.log(event);
       const eventData = JSON.parse(event.data);
       console.log("message event data:");
-      console.log(eventData);
-      // const withoutHeader = eventData.processed_image;
+			console.log(eventData);
+			
+			if (eventData.processed_image) {
+				this.processedImage = "data:image/jpeg;base64," + eventData.processed_image;
+			}
+			
     });
     this.socket.addEventListener("open", (event) => {
       console.log("websocket connection established");
@@ -110,7 +121,8 @@ export default {
       this.socket.send(JSON.stringify(message));
     },
     onCapture() {
-      this.img = this.$refs.webcam.capture();
+			this.img = this.$refs.webcam.capture();
+			this.socket.send(JSON.stringify({image_base_64: this.img.replace("data:image/jpeg;base64", "")}));
       console.log("capturing image");
       console.log(this.img);
     },
